@@ -8,8 +8,9 @@ import javax.servlet.http.HttpServletResponse;
 
 
 /**
- * L'implémentation du côté serveur du service
+ * L'implémentation côté serveur du service
  */
+@SuppressWarnings("serial")
 public class CarteServlet extends HttpServlet {
 
 	@Override
