@@ -14,10 +14,10 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
   </servlet>
   <servlet-mapping>
   	<servlet-name>carte</servlet-name>
-  	<url-pattern>carte/*</url-pattern>
+  	<url-pattern>/carte/*</url-pattern>
   </servlet-mapping>
 <servlet-mapping>
   	<servlet-name>createur</servlet-name>
-  	<url-pattern>createur/*</url-pattern>
+  	<url-pattern>/createur/*</url-pattern>
   </servlet-mapping>
 </web-app>
