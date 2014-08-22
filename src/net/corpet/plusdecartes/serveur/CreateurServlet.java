@@ -28,7 +28,11 @@ public class CreateurServlet extends HttpServlet {
 			Date dateCreation = new Date();
 			
 			concept.setProperty("dateCreation", dateCreation);
-		datastore.put(concept);
+			
+			datastore.put(concept);
+			
+			resp.setContentType("text/plain");
+	        resp.getWriter().println("Concept \"" + nom  + "\" ajouté.");
 		}
 	}
 }
