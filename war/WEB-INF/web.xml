@@ -8,8 +8,16 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
   	<servlet-name>carte</servlet-name>
   	<servlet-class>net.corpet.plusdecartes.serveur.CarteServlet</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>createur</servlet-name>
+    <servlet-class>net.corpet.plusdecartes.serveur.CreateurServlet</servlet-class>
+  </servlet>
   <servlet-mapping>
   	<servlet-name>carte</servlet-name>
-  	<url-pattern>/*</url-pattern>
+  	<url-pattern>carte/*</url-pattern>
+  </servlet-mapping>
+<servlet-mapping>
+  	<servlet-name>createur</servlet-name>
+  	<url-pattern>createur/*</url-pattern>
   </servlet-mapping>
 </web-app>
