@@ -13,8 +13,14 @@ import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
+import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.PreparedQuery;
+import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.Filter;
+import com.google.appengine.api.datastore.Query.FilterOperator;
+import com.google.appengine.api.datastore.Query.FilterPredicate;
 
 @SuppressWarnings("serial")
 public class CreateurServlet extends HttpServlet {
@@ -43,13 +49,11 @@ public class CreateurServlet extends HttpServlet {
 		Key ancetre = null;
 		
 		if (aType) {
-			ancetre = KeyFactory.createKey("Concept", type);
+			ancetre = KeyFactory.createKey("Type", type);
 			try {
 				base.get(ancetre);
 			} catch (EntityNotFoundException e) {
 				Entity nouveauType = new Entity(ancetre);
-				nouveauType.setProperty("concept", type);
-				nouveauType.setProperty("type","type");
 				
 				Date dateCreation = new Date();
 				nouveauType.setProperty("dateCreation", dateCreation);
@@ -65,7 +69,9 @@ public class CreateurServlet extends HttpServlet {
 			concept = aType?new Entity("Concept", nom, ancetre):new Entity("Concept", nom);
 			
 			for (String param : parametres.keySet()){
-				concept.setProperty(param, parametres.get(param)[0]);
+				if (!param.equals(type)){
+					concept.setProperty(param, parametres.get(param)[0]);	
+				}
 			}
 			
 			Date dateCreation = new Date();
@@ -74,16 +80,14 @@ public class CreateurServlet extends HttpServlet {
 			Random de = new Random();
 			concept.setProperty("ordreHasard", de.nextDouble());
 		
-			try {
-				base.get(concept.getKey());
+			Query q = new Query("Concept").setKeysOnly().setFilter(new FilterPredicate("concept", FilterOperator.EQUAL, nom));
+			PreparedQuery pq = base.prepare(q);
+			if (!pq.asList(FetchOptions.Builder.withLimit(1)).isEmpty()){
 				resp.getWriter().println("Concept \"" + nom  + "\" déjà présent dans la base.");
-			} 
-			catch (EntityNotFoundException e) {
+			} else {
 				base.put(concept);
-		}	
-			resp.getWriter().println("Concept \"" + nom  + "\" ajouté.");
+				resp.getWriter().println("Concept \"" + nom  + "\" ajouté.");
+			}
 		}
-		
-
 	}
 }
