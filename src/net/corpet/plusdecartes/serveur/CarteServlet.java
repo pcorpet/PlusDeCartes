@@ -1,6 +1,7 @@
 package net.corpet.plusdecartes.serveur;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -42,15 +43,36 @@ public class CarteServlet extends HttpServlet {
 		
 		resp.setContentType("text/plain");
 		DatastoreService base = DatastoreServiceFactory.getDatastoreService();
-        
+        int nombre = 1, essais = 0;
+        List<Key> cles = new ArrayList<Key>();
 		try {
-			String nom = (String) base.get(cleConceptAuHasard(base)).getProperty("concept");
-			resp.getWriter().println("Voici un concept tiré au hasard dans la base : " + nom);
-		} catch (ExceptionPasDEntite|EntityNotFoundException e) {
-			resp.getWriter().println("Il n'y a pas de concept correspondant à la requête");
-	        
-		}
+			nombre = Integer.parseInt(req.getParameter("nombre"));
+		} catch (NumberFormatException e) {}
 		
+		while (cles.size()<nombre && essais <= 10*nombre){
+			Key cle;
+			essais++;
+			try {
+				cle = cleConceptAuHasard(base);
+				if (!cles.contains(cle)) {
+					cles.add(cle);
+				}
+			} catch (ExceptionPasDEntite e) {
+				resp.getWriter().println("Il n'y a pas de concept correspondant à la requête");
+			}
+		}
+		if (cles.size()<nombre){
+			resp.getWriter().println("Nous n'avons réussi à extraire que "+ cles.size() + " concept(s) au hasard dans la base : ");			
+		} else {
+			resp.getWriter().println("Voici "+ nombre + " concept(s) tiré(s) au hasard dans la base : ");
+		}
+		for (Key cle : cles){
+			String nom;
+			try {
+				nom = (String) base.get(cle).getProperty("concept");
+				resp.getWriter().println(nom);
+			} catch (EntityNotFoundException e) {}
+		}		
 	}
 	
 	private Key cleConceptAuHasard(DatastoreService base) throws ExceptionPasDEntite {
