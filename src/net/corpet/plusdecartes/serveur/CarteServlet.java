@@ -11,9 +11,12 @@ import javax.servlet.http.HttpServletResponse;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
+import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 
@@ -22,6 +25,15 @@ import com.google.appengine.api.datastore.Query.FilterPredicate;
  * L'implémentation côté serveur du service
  */
 @SuppressWarnings("serial")
+class ExceptionPasDEntite extends Throwable{
+	Filter filtre;
+	
+	public ExceptionPasDEntite(Filter f){
+		filtre = f;
+	}
+}
+
+@SuppressWarnings("serial")
 public class CarteServlet extends HttpServlet {
 
 	@Override
@@ -29,28 +41,46 @@ public class CarteServlet extends HttpServlet {
             throws IOException {
 		
 		resp.setContentType("text/plain");
-        DatastoreService base = DatastoreServiceFactory.getDatastoreService();
-        Random de = new Random();
+		DatastoreService base = DatastoreServiceFactory.getDatastoreService();
         
+		try {
+			String nom = (String) base.get(cleConceptAuHasard(base)).getProperty("concept");
+			resp.getWriter().println("Voici un concept tiré au hasard dans la base : " + nom);
+		} catch (ExceptionPasDEntite|EntityNotFoundException e) {
+			resp.getWriter().println("Il n'y a pas de concept correspondant à la requête");
+	        
+		}
+		
+	}
+	
+	private Key cleConceptAuHasard(DatastoreService base) throws ExceptionPasDEntite {
+		return cleConceptAuHasard(base, null);
+	}
+	private Key cleConceptAuHasard(DatastoreService base, Filter filtre) throws ExceptionPasDEntite {
+		Random de = new Random();
         double seuil = de.nextDouble();
-        Filter filtreParDefaut = 
-        		new FilterPredicate("ordreHasard",Query.FilterOperator.GREATER_THAN, seuil);
         
-        Query q = new Query("Concept").setFilter(filtreParDefaut).addSort("ordreHasard");
+        FilterPredicate filtreParDefaut = 
+        		new FilterPredicate("ordreHasard",Query.FilterOperator.GREATER_THAN, seuil);
+        Filter filtreFinal;
+        if (filtre==null){
+        	filtreFinal = filtreParDefaut;
+        } else {
+        	filtreFinal = CompositeFilterOperator.and(filtre, filtreParDefaut);
+        }
+        Query q = new Query("Concept").setFilter(filtreFinal).addSort("ordreHasard");
         PreparedQuery pq = base.prepare(q);
         
         if (pq.countEntities(FetchOptions.Builder.withLimit(1))==0){
-        	q = new Query("Concept").addSort("ordreHasard");
+        	q = new Query("Concept").setFilter(filtre).addSort("ordreHasard");
         	pq = base.prepare(q);
         }
         
         List<Entity> concepts = pq.asList(FetchOptions.Builder.withLimit(1));
         if (concepts.isEmpty()){
-        	resp.getWriter().println("Il n'y a pas d'entité correspondant à votre requête.");
+        	throw new ExceptionPasDEntite(filtre);
         } else {
-        	String nom = (String) concepts.get(0).getProperty("concept");
-            resp.getWriter().println("Voici un concept tiré au hasard dans la base : " + nom);
+        	return concepts.get(0).getKey();
         }
-
-    }
+	}
 }
