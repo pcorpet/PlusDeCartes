@@ -2,6 +2,7 @@ package net.corpet.plusdecartes.serveur;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.Random;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -31,6 +32,9 @@ public class CreateurServlet extends HttpServlet {
 			
 			Date dateCreation = new Date();
 			concept.setProperty("dateCreation", dateCreation);
+			
+			Random de = new Random();
+			concept.setProperty("ordreHasard", de.nextDouble());
 		}
 		try {
 			base.get(concept.getKey());
