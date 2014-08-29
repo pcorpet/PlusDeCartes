@@ -68,7 +68,7 @@ public class CreateurServlet extends HttpServlet {
 			concept = aType?new Entity("Concept", nom, ancetre):new Entity("Concept", nom);
 			
 			for (String param : parametres.keySet()){
-				if (!param.equals(type)){
+				if (!param.equals("type")){
 					concept.setProperty(param, parametres.get(param)[0]);	
 				}
 			}
