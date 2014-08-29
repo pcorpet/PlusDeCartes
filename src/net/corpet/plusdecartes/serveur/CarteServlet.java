@@ -36,15 +36,14 @@ public class CarteServlet extends HttpServlet {
         Filter filtreParDefaut = 
         		new FilterPredicate("ordreHasard",Query.FilterOperator.GREATER_THAN, seuil);
         
-        Query q = new Query("concept").setFilter(filtreParDefaut).addSort("ordreHasard");
+        Query q = new Query("Concept").setFilter(filtreParDefaut).addSort("ordreHasard");
         PreparedQuery pq = base.prepare(q);
         
-        /*if (pq.countEntities(FetchOptions.Builder.withLimit(1))==0){
-        	q = new Query("concept").addSort("ordreHasard");
+        if (pq.countEntities(FetchOptions.Builder.withLimit(1))==0){
+        	q = new Query("Concept").addSort("ordreHasard");
         	pq = base.prepare(q);
-        }*/
+        }
         
-        resp.getWriter().println(seuil);        
         List<Entity> concepts = pq.asList(FetchOptions.Builder.withLimit(1));
         if (concepts.isEmpty()){
         	resp.getWriter().println("Il n'y a pas d'entité correspondant à votre requête.");
