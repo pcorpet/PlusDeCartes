@@ -2,6 +2,7 @@ package net.corpet.plusdecartes.serveur;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.Map;
 import java.util.Random;
 
 import javax.servlet.http.HttpServlet;
@@ -21,14 +22,20 @@ public class CreateurServlet extends HttpServlet {
 
 		DatastoreService base = DatastoreServiceFactory.getDatastoreService();
 		
-		String nom = req.getParameter("nom");
+		@SuppressWarnings("unchecked")
+		Map<String,String[]> parametres = req.getParameterMap();
+		String nom = parametres.get("concept")[0];
+		
 		Entity concept = null;
 		
 		resp.setContentType("text/plain");
 
 		if (nom != null) {
 			concept = new Entity("Concept", nom);
-			concept.setProperty("concept", nom);
+			
+			for (String param : parametres.keySet()){
+				concept.setProperty(param, parametres.get(param)[0]);
+			}
 			
 			Date dateCreation = new Date();
 			concept.setProperty("dateCreation", dateCreation);
