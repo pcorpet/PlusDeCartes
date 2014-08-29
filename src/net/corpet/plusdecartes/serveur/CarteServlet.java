@@ -68,11 +68,11 @@ public class CarteServlet extends HttpServlet {
         } else {
         	filtreFinal = CompositeFilterOperator.and(filtre, filtreParDefaut);
         }
-        Query q = new Query("Concept").setFilter(filtreFinal).addSort("ordreHasard");
+        Query q = new Query("Concept").setKeysOnly().setFilter(filtreFinal).addSort("ordreHasard");
         PreparedQuery pq = base.prepare(q);
         
         if (pq.countEntities(FetchOptions.Builder.withLimit(1))==0){
-        	q = new Query("Concept").setFilter(filtre).addSort("ordreHasard");
+        	q.setFilter(filtre);
         	pq = base.prepare(q);
         }
         
