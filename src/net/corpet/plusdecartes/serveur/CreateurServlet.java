@@ -21,7 +21,7 @@ public class CreateurServlet extends HttpServlet {
 
 		DatastoreService base = DatastoreServiceFactory.getDatastoreService();
 		
-		String nom = req.getQueryString();
+		String nom = req.getParameter("nom");
 		Entity concept = null;
 		
 		resp.setContentType("text/plain");
