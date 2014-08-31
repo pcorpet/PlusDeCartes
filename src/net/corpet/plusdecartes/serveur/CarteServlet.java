@@ -47,29 +47,28 @@ public class CarteServlet extends HttpServlet {
 		
 		resp.setContentType("text/plain");
 		DatastoreService base = DatastoreServiceFactory.getDatastoreService();
-        int nombre = 1, essais = 0;
+        int nombre = 1;
         List<Key> cles = new ArrayList<Key>();
 		try {
 			nombre = Integer.parseInt(req.getParameter("nombre"));
 		} catch (NumberFormatException e) {}
 		
-		while (cles.size()<nombre && essais <= 10*nombre){
-			Key cle;
-			essais++;
+		for (int i=0;i<nombre;i++){
+			List<Key> clesPoten;
 			try {
-				cle = cleConceptAuHasard(base, 1).get(0);
-				if (!cles.contains(cle)) {
-					cles.add(cle);
+				clesPoten = cleConceptAuHasard(base, i+1);
+				resp.getWriter().println("i = " + i);
+				for (Key cle: clesPoten){
+					if (!cles.contains(cle)){
+						cles.add(cle);
+						break;
+					}
 				}
 			} catch (ExceptionPasAssezDEntites e) {
-				resp.getWriter().println("Il n'y a pas de concept correspondant à la requête");
+				resp.getWriter().println("Il n'y a pas assez de concepts correspondant à la requête");
 			}
 		}
-		if (cles.size()<nombre){
-			resp.getWriter().println("Nous n'avons réussi à extraire que "+ cles.size() + " concept(s) au hasard dans la base : ");			
-		} else {
-			resp.getWriter().println("Voici "+ nombre + " concept(s) tiré(s) au hasard dans la base : ");
-		}
+		resp.getWriter().println("Voici "+ cles.size() + " concept(s) tiré(s) au hasard dans la base : ");
 		for (Key cle : cles){
 			String nom;
 			try {
