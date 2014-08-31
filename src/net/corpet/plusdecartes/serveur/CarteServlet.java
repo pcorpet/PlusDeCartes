@@ -26,11 +26,15 @@ import com.google.appengine.api.datastore.Query.FilterPredicate;
  * L'implémentation côté serveur du service
  */
 @SuppressWarnings("serial")
-class ExceptionPasDEntite extends Throwable{
+class ExceptionPasAssezDEntites extends Throwable{
 	Filter filtre;
+	int nombre;
+	List<Key> liste;
 	
-	public ExceptionPasDEntite(Filter f){
+	public ExceptionPasAssezDEntites(Filter f, int n, List<Key> l){
 		filtre = f;
+		nombre = n;
+		liste = l;
 	}
 }
 
@@ -53,11 +57,11 @@ public class CarteServlet extends HttpServlet {
 			Key cle;
 			essais++;
 			try {
-				cle = cleConceptAuHasard(base);
+				cle = cleConceptAuHasard(base, 1).get(0);
 				if (!cles.contains(cle)) {
 					cles.add(cle);
 				}
-			} catch (ExceptionPasDEntite e) {
+			} catch (ExceptionPasAssezDEntites e) {
 				resp.getWriter().println("Il n'y a pas de concept correspondant à la requête");
 			}
 		}
@@ -75,10 +79,10 @@ public class CarteServlet extends HttpServlet {
 		}		
 	}
 	
-	private Key cleConceptAuHasard(DatastoreService base) throws ExceptionPasDEntite {
-		return cleConceptAuHasard(base, null);
+	private List<Key> cleConceptAuHasard(DatastoreService base, int nombre) throws ExceptionPasAssezDEntites {
+		return cleConceptAuHasard(base, nombre, null);
 	}
-	private Key cleConceptAuHasard(DatastoreService base, Filter filtre) throws ExceptionPasDEntite {
+	private List<Key> cleConceptAuHasard(DatastoreService base, int nombre, Filter filtre) throws ExceptionPasAssezDEntites {
 		Random de = new Random();
         double seuil = de.nextDouble();
         
@@ -93,16 +97,20 @@ public class CarteServlet extends HttpServlet {
         Query q = new Query("Concept").setKeysOnly().setFilter(filtreFinal).addSort("ordreHasard");
         PreparedQuery pq = base.prepare(q);
         
-        if (pq.countEntities(FetchOptions.Builder.withLimit(1))==0){
+        if (pq.countEntities(FetchOptions.Builder.withLimit(nombre))<nombre){
         	q.setFilter(filtre);
         	pq = base.prepare(q);
         }
         
-        List<Entity> concepts = pq.asList(FetchOptions.Builder.withLimit(1));
-        if (concepts.isEmpty()){
-        	throw new ExceptionPasDEntite(filtre);
+        List<Entity> concepts = pq.asList(FetchOptions.Builder.withLimit(nombre));
+        List<Key> res = new ArrayList<Key>();
+        for (Entity e : concepts){
+        	res.add(e.getKey());
+        }
+        if (concepts.size()<nombre){
+        	throw new ExceptionPasAssezDEntites(filtre, nombre, res);
         } else {
-        	return concepts.get(0).getKey();
+        	return res;
         }
 	}
 }
