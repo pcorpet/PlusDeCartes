@@ -57,7 +57,6 @@ public class CarteServlet extends HttpServlet {
 			List<Key> clesPoten;
 			try {
 				clesPoten = cleConceptAuHasard(base, i+1);
-				resp.getWriter().println("i = " + i);
 				for (Key cle: clesPoten){
 					if (!cles.contains(cle)){
 						cles.add(cle);
