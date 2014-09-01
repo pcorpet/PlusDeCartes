@@ -19,6 +19,7 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
+import com.google.appengine.api.datastore.QueryResultList;
 
 
 /**
@@ -27,12 +28,10 @@ import com.google.appengine.api.datastore.Query.FilterPredicate;
 @SuppressWarnings("serial")
 class ExceptionPasAssezDEntites extends Throwable{
 	Filter filtre;
-	int nombre;
 	List<Key> liste;
 	
-	public ExceptionPasAssezDEntites(Filter f, int n, List<Key> l){
+	public ExceptionPasAssezDEntites(Filter f, List<Key> l){
 		filtre = f;
-		nombre = n;
 		liste = l;
 	}
 }
@@ -53,17 +52,10 @@ public class CarteServlet extends HttpServlet {
 		} catch (NumberFormatException e) {}
 		
 		for (int i=0;i<nombre;i++){
-			List<Key> clesPoten;
 			try {
-				clesPoten = cleConceptAuHasard(base, i+1);
-				for (Key cle: clesPoten){
-					if (!cles.contains(cle)){
-						cles.add(cle);
-						break;
-					}
-				}
+				cles.add(cleConceptAuHasard(base, cles));
 			} catch (ExceptionPasAssezDEntites e) {
-				resp.getWriter().println("Il n'y a pas assez de concepts correspondant à la requête");
+				resp.getWriter().println("Il n'y a que " + e.liste.size() + " correspondant à la requête.");
 			}
 		}
 		resp.getWriter().println("Voici "+ cles.size() + " concept(s) tiré(s) au hasard dans la base : ");
@@ -72,10 +64,11 @@ public class CarteServlet extends HttpServlet {
 		}		
 	}
 	
-	private List<Key> cleConceptAuHasard(DatastoreService base, int nombre) throws ExceptionPasAssezDEntites {
-		return cleConceptAuHasard(base, nombre, null);
+	private Key cleConceptAuHasard(DatastoreService base, List<Key> interdites) throws ExceptionPasAssezDEntites {
+		return cleConceptAuHasard(base, interdites, null);
 	}
-	private List<Key> cleConceptAuHasard(DatastoreService base, int nombre, Filter filtre) throws ExceptionPasAssezDEntites {
+	private Key cleConceptAuHasard(DatastoreService base, List<Key> interdites, Filter filtre) 
+			throws ExceptionPasAssezDEntites {
 		Random de = new Random();
         double seuil = de.nextDouble();
         
@@ -90,20 +83,27 @@ public class CarteServlet extends HttpServlet {
         Query q = new Query("Concept").setKeysOnly().setFilter(filtreFinal).addSort("ordreHasard");
         PreparedQuery pq = base.prepare(q);
         
-        if (pq.countEntities(FetchOptions.Builder.withLimit(nombre))<nombre){
-        	q.setFilter(filtre);
-        	pq = base.prepare(q);
-        }
-        
-        List<Entity> concepts = pq.asList(FetchOptions.Builder.withLimit(nombre));
-        List<Key> res = new ArrayList<Key>();
-        for (Entity e : concepts){
-        	res.add(e.getKey());
-        }
-        if (concepts.size()<nombre){
-        	throw new ExceptionPasAssezDEntites(filtre, nombre, res);
-        } else {
-        	return res;
-        }
+        FetchOptions fetchOptions = FetchOptions.Builder.withLimit(1);
+        QueryResultList<Entity> concepts = pq.asQueryResultList(fetchOptions);
+        Key res = null;
+        boolean boucle = false;
+        do {
+        	try {
+        		res = concepts.get(0).getKey();
+        	}
+        	catch (IndexOutOfBoundsException e) {
+        		if (boucle) {
+        			throw new ExceptionPasAssezDEntites(filtre, interdites);
+        		}
+        		q.setFilter(filtre);
+        		pq = base.prepare(q);
+        		fetchOptions = FetchOptions.Builder.withLimit(1);
+        		concepts = pq.asQueryResultList(fetchOptions);
+        		boucle = true;
+        	}
+        	fetchOptions.startCursor(concepts.getCursor());
+        	concepts = pq.asQueryResultList(fetchOptions);
+        } while (res==null || interdites.contains(res));
+        return res;
 	}
 }
