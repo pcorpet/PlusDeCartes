@@ -69,11 +69,7 @@ public class CarteServlet extends HttpServlet {
 		}
 		resp.getWriter().println("Voici "+ cles.size() + " concept(s) tiré(s) au hasard dans la base : ");
 		for (Key cle : cles){
-			String nom;
-			try {
-				nom = (String) base.get(cle).getProperty("concept");
-				resp.getWriter().println(nom);
-			} catch (EntityNotFoundException e) {}
+			resp.getWriter().println(cle.getName());
 		}		
 	}
 	
