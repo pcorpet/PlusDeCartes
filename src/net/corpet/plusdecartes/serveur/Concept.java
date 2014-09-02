@@ -11,10 +11,10 @@ import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
-import com.google.appengine.api.datastore.QueryResultList;
 import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
+import com.google.appengine.api.datastore.QueryResultList;
 
 @SuppressWarnings("serial")
 class ExceptionPasAssezDEntites extends Throwable{
@@ -91,7 +91,6 @@ class Requete {
         		q.setFilter(filtre);
         		pq = base.prepare(q);
         		fetchOptions = FetchOptions.Builder.withLimit(1);
-        		concepts = pq.asQueryResultList(fetchOptions);
         		boucle = true;
         	}
         	
